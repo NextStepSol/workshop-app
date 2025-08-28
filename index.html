@@ -169,20 +169,20 @@
           <textarea id="bk_notes" rows="3" class="px-3 py-2 rounded-xl border border-graymid/60"></textarea>
         </label>
 
-        <div class="md:col-span-2 flex items-center justify-between gap-2">
-          <div class="flex gap-2">
-            <button type="button" id="btnDeleteBooking"
-              class="px-4 py-2 rounded-xl bg-rose-100 text-rose-700 hidden">Löschen</button>
-            <button type="button" id="btnWhatsappShare"
-              class="px-4 py-2 rounded-xl bg-green-600 text-white hidden">WhatsApp-Bestätigung</button>
-          </div>
-          <div class="flex gap-2">
-            <button type="button" data-close="booking" class="px-4 py-2 rounded-xl bg-graysoft">Abbrechen</button>
-            <button type="submit" class="px-4 py-2 rounded-xl text-white" style="background:#AF9778">Speichern</button>
-          </div>
+        <div class="md:col-span-2 flex flex-col sm:flex-row gap-2">
+          <button type="button" id="btnDeleteBooking"
+            class="w-full sm:w-auto px-4 py-2 rounded-xl bg-rose-100 text-rose-700 hidden">Löschen</button>
+          <button type="button" id="btnWhatsappShare"
+            class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 text-white hidden">WhatsApp</button>
+          <button type="button" data-close="booking"
+            class="w-full sm:w-auto px-4 py-2 rounded-xl bg-graysoft">Abbrechen</button>
+          <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl text-white"
+            style="background:#AF9778">Speichern</button>
         </div>
-      </form>
+
     </div>
+    </form>
+  </div>
   </div>
 
   <!-- Modal: Termin -->
@@ -226,10 +226,15 @@
           <input type="datetime-local" id="sl_ends" class="px-3 py-2 rounded-xl border border-graymid/60" required>
         </label>
 
-        <div class="md:col-span-2 flex justify-end gap-2">
-          <button type="button" data-close="slots" class="px-4 py-2 rounded-xl bg-graysoft">Abbrechen</button>
-          <button type="submit" class="px-4 py-2 rounded-xl text-white" style="background:#AF9778">Speichern</button>
+        <div class="md:col-span-2 flex flex-col sm:flex-row gap-2">
+          <button type="button" data-close="slots" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-graysoft">
+            Abbrechen
+          </button>
+          <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl text-white" style="background:#AF9778">
+            Speichern
+          </button>
         </div>
+
       </form>
     </div>
   </div>
