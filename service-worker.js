@@ -1,5 +1,5 @@
 // Simple App-Shell SW
-const CACHE = "seeyou-v1.0.0";
+const CACHE = "seeyou-v1.0.1";
 const PRECACHE = [
   "./",
   "./index.html",
