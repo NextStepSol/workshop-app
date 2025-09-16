@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="de">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -14,266 +13,156 @@
   </script>
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#AF9778">
-
-  <!-- iOS PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="SeeYou Workshops">
   <link rel="apple-touch-icon" href="static/icons/logo.png">
-
   <style>
-    /* neues BG-Bild */
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: -2;
-      background: url("static/bg.jpg") center/cover no-repeat;
-      filter: brightness(1.02);
-    }
-
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      background: linear-gradient(to bottom, rgba(255, 255, 255, .85), rgba(255, 255, 255, .9));
-    }
-
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    body::before { content: ""; position: fixed; inset: 0; z-index: -2; background: url("static/bg.jpg") center/cover no-repeat; filter: brightness(1.02); }
+    body::after { content: ""; position: fixed; inset: 0; z-index: -1; background: linear-gradient(to bottom, rgba(255, 255, 255, .85), rgba(255, 255, 255, .9)); }
   </style>
 </head>
-
 <body class="text-slate-900">
-  <header class="max-w-4xl mx-auto px-4 py-4">
-    <div class="grid grid-cols-3 items-center">
-      <div>
-        <button id="btnSettings" class="px-3 py-2 rounded-xl bg-graysoft hover:bg-graymid text-sm">⚙️ Einstellungen</button>
-      </div>
 
-      <div class="justify-self-center flex items-center gap-3">
-        <img src="static/logo.png" alt="SeeYou" class="h-10 w-auto relative z-10">
-        <h1 class="text-xl font-semibold" style="color:#AF9778">SeeYou</h1>
-      </div>
-
-      <div class="flex items-center gap-2 justify-self-end">
-        <button id="btnMenu" class="sm:hidden p-2 rounded-xl bg-graysoft hover:bg-graymid" aria-label="Menü">☰</button>
-
-        <div class="hidden sm:flex gap-2">
-          <button id="btnManageSlots" class="px-3 py-2 rounded-xl bg-graysoft hover:bg-graymid text-sm">Neuer Termin</button>
-          <button id="btnExportCsv" class="px-3 py-2 rounded-xl bg-graysoft hover:bg-graymid text-sm">CSV Export</button>
-          <button id="btnBackup" class="px-3 py-2 rounded-xl bg-graysoft hover:bg-graymid text-sm">Backup</button>
-          <label class="cursor-pointer px-3 py-2 rounded-xl bg-graysoft hover:bg-graymid text-sm">
-            Wiederherstellen <input type="file" id="fileRestore" class="hidden">
-          </label>
-          <button id="btnArchiveView" class="px-3 py-2 rounded-xl bg-graysoft hover:bg-graymid text-sm">Archiv</button>
+<header class="max-w-4xl mx-auto px-4 py-4">
+  <div class="grid grid-cols-3 items-center">
+    <div></div>
+    <div class="justify-self-center flex items-center gap-3">
+      <img src="static/logo.png" alt="SeeYou" class="h-10 w-auto relative z-10">
+      <h1 class="text-xl font-semibold" style="color:#AF9778">SeeYou</h1>
+    </div>
+    <div class="flex items-center gap-2 justify-self-end">
+      <button id="btnMenu" class="sm:hidden p-2 rounded-xl bg-graysoft hover:bg-graymid" aria-label="Menü">☰</button>
+      <div id="desktop-menu-container" class="relative hidden sm:block">
+        <button id="desktop-menu-trigger" class="flex items-center gap-1 px-3 py-2 rounded-xl bg-graysoft hover:bg-graymid text-sm">
+          <span>Aktionen</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div id="desktop-menu-panel" class="absolute right-0 mt-2 w-56 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20 hidden">
+          <div class="py-1">
+            <a href="#" id="menu_btnManageSlots" class="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-100">Neuer Termin</a>
+            <a href="#" id="menu_btnSettings" class="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-100">Einstellungen</a>
+            <a href="#" id="menu_btnExportCsv" class="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-100">CSV Export</a>
+            <a href="#" id="menu_btnBackup" class="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-100">Backup</a>
+            <label class="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-100 cursor-pointer">
+              Wiederherstellen
+              <input type="file" id="fileRestore" class="hidden">
+            </label>
+            <a href="#" id="menu_btnArchiveView" class="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-100">Archiv anzeigen</a>
+          </div>
         </div>
       </div>
     </div>
-  </header>
-
-  <div id="mobileMenu" class="fixed inset-0 z-50 hidden">
-    <div class="absolute inset-0 bg-black/40" data-close="mobilemenu"></div>
-
-    <div id="mobilePanel" class="absolute right-0 top-0 h-full w-[80%] max-w-xs bg-white shadow-2xl p-4 flex flex-col gap-3
-              translate-x-full transition-transform duration-200">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-lg font-semibold" style="color:#AF9778">Menü</span>
-        <button class="text-slate-500 hover:text-slate-700" data-close="mobilemenu">✕</button>
-      </div>
-
-      <button id="m_btnSettings" class="px-3 py-3 rounded-xl bg-graysoft text-left">⚙️ Einstellungen</button>
-      <button id="m_btnManageSlots" class="px-3 py-3 rounded-xl bg-graysoft text-left">Neuer Termin</button>
-      <button id="m_btnExportCsv" class="px-3 py-3 rounded-xl bg-graysoft text-left">CSV Export</button>
-      <button id="m_btnBackup" class="px-3 py-3 rounded-xl bg-graysoft text-left">Backup</button>
-      <label class="cursor-pointer px-3 py-3 rounded-xl bg-graysoft text-left">
-        Wiederherstellen <input type="file" id="m_fileRestore" class="hidden">
-      </label>
-      <button id="m_btnArchiveView" class="px-3 py-3 rounded-xl bg-graysoft text-left">Archiv</button>
-    </div>
   </div>
+</header>
 
-  <section class="max-w-4xl mx-auto px-4">
-    <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 my-3">
-      <input id="search" class="w-full px-3 py-3 rounded-xl border border-graymid/60 bg-white/80 backdrop-blur" placeholder="Suche nach Name, Telefon, Titel, Datum…">
-      <select id="filterStatus" class="px-3 py-3 rounded-xl border border-graymid/60 bg-white/80 min-w-[120px]">
-        <option value="">alle</option>
-        <option value="open">offen</option>
-        <option value="full">voll</option>
-        <option value="past">vergangen</option>
-        <option value="archived">archiv</option>
-      </select>
+<div id="mobileMenu" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/40" data-close="#mobileMenu"></div>
+  <div id="mobilePanel" class="absolute right-0 top-0 h-full w-[80%] max-w-xs bg-white shadow-2xl p-4 flex flex-col gap-3 translate-x-full transition-transform duration-200">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-lg font-semibold" style="color:#AF9778">Menü</span>
+      <button data-close="#mobileMenu" class="text-slate-500 hover:text-slate-700">✕</button>
     </div>
-  </section>
+    <button id="m_btnSettings" class="px-3 py-3 rounded-xl bg-graysoft text-left">Einstellungen</button>
+    <button id="m_btnManageSlots" class="px-3 py-3 rounded-xl bg-graysoft text-left">Neuer Termin</button>
+    <button id="m_btnExportCsv" class="px-3 py-3 rounded-xl bg-graysoft text-left">CSV Export</button>
+    <button id="m_btnBackup" class="px-3 py-3 rounded-xl bg-graysoft text-left">Backup</button>
+    <label class="cursor-pointer px-3 py-3 rounded-xl bg-graysoft text-left" id="m_btnRestore">Wiederherstellen</label>
+    <button id="m_btnArchiveView" class="px-3 py-3 rounded-xl bg-graysoft text-left">Archiv</button>
+  </div>
+</div>
 
-  <main class="max-w-4xl mx-auto px-4 pb-28" id="list"></main>
+<section class="max-w-4xl mx-auto px-4">
+  <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 my-3">
+    <input id="search" class="w-full px-3 py-3 rounded-xl border border-graymid/60 bg-white/80 backdrop-blur" placeholder="Suche nach Name, Telefon, Titel, Datum…">
+    <select id="filterStatus" class="px-3 py-3 rounded-xl border border-graymid/60 bg-white/80 min-w-[120px]">
+      <option value="">alle</option>
+      <option value="open">offen</option>
+      <option value="full">voll</option>
+      <option value="past">vergangen</option>
+      <option value="archived">archiv</option>
+    </select>
+  </div>
+</section>
 
-  <div id="modalBooking" class="modal fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5">
-      <div class="flex items-center justify-between mb-3">
-        <h2 id="modalBookingTitle" class="text-lg font-semibold" style="color:#AF9778">Buchung</h2>
-        <button data-close="booking" class="text-slate-500 hover:text-slate-700">✕</button>
-      </div>
-      <form id="formBooking" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <label class="flex flex-col gap-1">
-          <span class="text-sm">Anrede</span>
-          <select id="bk_salutation" class="px-3 py-2 rounded-xl border border-graymid/60">
-            <option value="Liebe/r">Liebe/r</option>
-            <option value="Liebe">Liebe</option>
-            <option value="Lieber">Lieber</option>
-          </select>
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-sm">Name *</span>
-          <input required type="text" id="bk_name" class="px-3 py-2 rounded-xl border border-graymid/60">
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-sm">Telefon *</span>
-          <input required type="tel" id="bk_phone" class="px-3 py-2 rounded-xl border border-graymid/60">
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-sm">Personen *</span>
-          <input required type="number" min="1" step="1" id="bk_count" class="px-3 py-2 rounded-xl border border-graymid/60" value="1">
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-sm">Kontaktkanal</span>
-          <select id="bk_channel" class="px-3 py-2 rounded-xl border border-graymid/60">
-            <option value="">–</option>
-            <option>Instagram</option>
-            <option>WhatsApp</option>
-            <option>E-Mail</option>
-            <option>Triviar</option>
-            <option>Telefonisch</option>
-            <option>Persönlich</option>
-          </select>
-        </label>
-        <label class="md:col-span-2 flex flex-col gap-1">
-          <span class="text-sm">Notiz</span>
-          <textarea id="bk_notes" rows="3" class="px-3 py-2 rounded-xl border border-graymid/60"></textarea>
-        </label>
+<main class="max-w-4xl mx-auto px-4 pb-28" id="list"></main>
+
+<div id="modalBooking" class="modal fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 id="modalBookingTitle" class="text-lg font-semibold" style="color:#AF9778">Buchung</h2>
+      <button data-close="#modalBooking" class="text-slate-500 hover:text-slate-700">✕</button>
+    </div>
+    <form id="formBooking" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <label class="flex flex-col gap-1"><span class="text-sm">Anrede</span><select id="bk_salutation" class="px-3 py-2 rounded-xl border border-graymid/60"><option value="Liebe/r">Liebe/r</option><option value="Liebe">Liebe</option><option value="Lieber">Lieber</option></select></label>
+        <label class="flex flex-col gap-1"><span class="text-sm">Name *</span><input required type="text" id="bk_name" class="px-3 py-2 rounded-xl border border-graymid/60"></label>
+        <label class="flex flex-col gap-1"><span class="text-sm">Telefon *</span><input required type="tel" id="bk_phone" class="px-3 py-2 rounded-xl border border-graymid/60"></label>
+        <label class="flex flex-col gap-1"><span class="text-sm">Personen *</span><input required type="number" min="1" step="1" id="bk_count" class="px-3 py-2 rounded-xl border border-graymid/60" value="1"></label>
+        <label class="flex flex-col gap-1"><span class="text-sm">Kontaktkanal</span><select id="bk_channel" class="px-3 py-2 rounded-xl border border-graymid/60"><option value="">–</option><option>Instagram</option><option>WhatsApp</option><option>E-Mail</option><option>Triviar</option><option>Telefonisch</option><option>Persönlich</option></select></label>
+        <label class="md:col-span-2 flex flex-col gap-1"><span class="text-sm">Notiz</span><textarea id="bk_notes" rows="3" class="px-3 py-2 rounded-xl border border-graymid/60"></textarea></label>
         <div class="md:col-span-2 flex flex-col sm:flex-row gap-2">
-          <button type="button" id="btnDeleteBooking" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-rose-100 text-rose-700 hidden">Löschen</button>
-          <button type="button" id="btnWhatsappShare" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 text-white hidden">WhatsApp</button>
-          <button type="button" data-close="booking" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-graysoft">Abbrechen</button>
-          <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl text-white" style="background:#AF9778">Speichern</button>
+            <button type="button" id="btnDeleteBooking" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-rose-100 text-rose-700 hidden">Löschen</button>
+            <button type="button" id="btnWhatsappShare" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 text-white hidden">WhatsApp</button>
+            <button type="button" data-close="#modalBooking" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-graysoft">Abbrechen</button>
+            <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl text-white" style="background:#AF9778">Speichern</button>
         </div>
-      </form>
-    </div>
+    </form>
   </div>
+</div>
 
-  <div id="modalSlots" class="modal fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4">
+<div id="modalSlots" class="modal fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5">
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-lg font-semibold" style="color:#AF9778">Termin anlegen / bearbeiten</h2>
-        <button data-close="slots" class="text-slate-500 hover:text-slate-700">✕</button>
+        <button data-close="#modalSlots" class="text-slate-500 hover:text-slate-700">✕</button>
       </div>
       <form id="formSlot" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <label class="flex flex-col gap-1 md:col-span-2">
-          <span class="text-sm">Kategorie</span>
-          <select id="sl_category" class="px-3 py-2 rounded-xl border border-graymid/60">
-            <option>Schmuck-Workshop</option>
-            <option>Kindergeburtstag</option>
-            <option>JGA</option>
-            <option>Mädelsabend</option>
-            <option>Weihnachtsfeier</option>
-            <option>Sonstiges</option>
-          </select>
-        </label>
-        <label class="flex flex-col gap-1 md:col-span-2" id="row_title_other" style="display:none">
-          <span class="text-sm">Titel (bei „Sonstiges”)</span>
-          <input type="text" id="sl_title_other" class="px-3 py-2 rounded-xl border border-graymid/60" placeholder="Eigener Titel">
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-sm">Kapazität *</span>
-          <input type="number" min="1" step="1" id="sl_capacity" class="px-3 py-2 rounded-xl border border-graymid/60" value="10" required>
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-sm">Start *</span>
-          <input type="datetime-local" id="sl_starts" class="px-3 py-2 rounded-xl border border-graymid/60" required>
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-sm">Ende *</span>
-          <input type="datetime-local" id="sl_ends" class="px-3 py-2 rounded-xl border border-graymid/60" required>
-        </label>
+        <label class="flex flex-col gap-1 md:col-span-2"><span class="text-sm">Kategorie</span><select id="sl_category" class="px-3 py-2 rounded-xl border border-graymid/60"><option>Schmuck-Workshop</option><option>Kindergeburtstag</option><option>JGA</option><option>Mädelsabend</option><option>Weihnachtsfeier</option><option>Sonstiges</option></select></label>
+        <label class="flex flex-col gap-1 md:col-span-2" id="row_title_other" style="display:none"><span class="text-sm">Titel (bei „Sonstiges”)</span><input type="text" id="sl_title_other" class="px-3 py-2 rounded-xl border border-graymid/60" placeholder="Eigener Titel"></label>
+        <label class="flex flex-col gap-1"><span class="text-sm">Kapazität *</span><input type="number" min="1" step="1" id="sl_capacity" class="px-3 py-2 rounded-xl border border-graymid/60" value="10" required></label>
+        <label class="flex flex-col gap-1"><span class="text-sm">Start *</span><input type="datetime-local" id="sl_starts" class="px-3 py-2 rounded-xl border border-graymid/60" required></label>
+        <label class="flex flex-col gap-1"><span class="text-sm">Ende *</span><input type="datetime-local" id="sl_ends" class="px-3 py-2 rounded-xl border border-graymid/60" required></label>
         <div class="md:col-span-2 flex flex-col sm:flex-row gap-2">
-          <button type="button" data-close="slots" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-graysoft">Abbrechen</button>
-          <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl text-white" style="background:#AF9778">Speichern</button>
+            <button type="button" data-close="#modalSlots" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-graysoft">Abbrechen</button>
+            <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl text-white" style="background:#AF9778">Speichern</button>
         </div>
       </form>
     </div>
-  </div>
+</div>
 
-  <div id="modalConfirmDelete" class="modal fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4">
+<div id="modalConfirmDelete" class="modal fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-      <div class="flex items-start gap-3">
-        <div class="text-2xl">⚠️</div>
-        <div>
-          <h3 class="text-xl font-semibold mb-1 text-rose-700">Achtung</h3>
-          <p class="text-slate-700">Termin wirklich löschen? Alle zugehörigen Buchungen werden ebenfalls gelöscht.</p>
-        </div>
-      </div>
-      <div class="mt-5 flex justify-end gap-2">
-        <button id="btnCancelDelete" class="px-4 py-2 rounded-xl bg-graysoft">Abbrechen</button>
-        <button id="btnConfirmDelete" class="px-4 py-2 rounded-xl bg-rose-600 text-white">Endgültig löschen</button>
-      </div>
+        <div class="flex items-start gap-3"><div class="text-2xl">⚠️</div><div><h3 class="text-xl font-semibold mb-1 text-rose-700">Achtung</h3><p class="text-slate-700">Termin wirklich löschen? Alle zugehörigen Buchungen werden ebenfalls gelöscht.</p></div></div>
+        <div class="mt-5 flex justify-end gap-2"><button id="btnCancelDelete" class="px-4 py-2 rounded-xl bg-graysoft">Abbrechen</button><button id="btnConfirmDelete" class="px-4 py-2 rounded-xl bg-rose-600 text-white">Endgültig löschen</button></div>
     </div>
-  </div>
+</div>
 
-  <div id="modalSettings" class="modal fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4">
+<div id="modalSettings" class="modal fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-5">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-lg font-semibold" style="color:#AF9778">Einstellungen</h2>
-        <button data-close="settings" class="text-slate-500 hover:text-slate-700">✕</button>
-      </div>
-      <form id="formSettings">
-        <label class="flex flex-col gap-1">
-          <span class="text-sm font-medium">WhatsApp-Textvorlage</span>
-          <p class="text-xs text-slate-500 mb-2">
-            Du kannst folgende Platzhalter verwenden: [Anrede], [Name], [Datum], [Anzahl], [Du_Akk] (euch/dich), [Du_Dat] (euch/dir).
-          </p>
-          <textarea id="settings_whatsapp" rows="10" class="w-full px-3 py-2 rounded-xl border border-graymid/60 text-sm font-mono"></textarea>
-        </label>
-        <div class="mt-4 flex flex-col sm:flex-row gap-2">
-          <button type="button" data-close="settings" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-graysoft">Abbrechen</button>
-          <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl text-white" style="background:#AF9778">Speichern</button>
-        </div>
-      </form>
+        <div class="flex items-center justify-between mb-3"><h2 class="text-lg font-semibold" style="color:#AF9778">Einstellungen</h2><button data-close="#modalSettings" class="text-slate-500 hover:text-slate-700">✕</button></div>
+        <form id="formSettings">
+            <label class="flex flex-col gap-1"><span class="text-sm font-medium">WhatsApp-Textvorlage</span><p class="text-xs text-slate-500 mb-2">Platzhalter: [Anrede], [Name], [Datum], [Anzahl], [Du_Akk] (euch/dich), [Du_Dat] (euch/dir).</p><textarea id="settings_whatsapp" rows="10" class="w-full px-3 py-2 rounded-xl border border-graymid/60 text-sm font-mono"></textarea></label>
+            <div class="mt-4 flex flex-col sm:flex-row gap-2"><button type="button" data-close="#modalSettings" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-graysoft">Abbrechen</button><button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl text-white" style="background:#AF9778">Speichern</button></div>
+        </form>
     </div>
-  </div>
+</div>
 
-  <div id="modalReminder" class="modal fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4">
+<div id="modalReminder" class="modal fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-      <div class="flex items-start gap-3">
-        <div class="text-2xl">💡</div>
-        <div>
-          <h3 class="text-xl font-semibold mb-1" style="color:#AF9778">Erinnerung</h3>
-          <p class="text-slate-700">Es ist wieder Zeit für ein Backup, um deine Daten zu sichern.</p>
-        </div>
-      </div>
-      <div class="mt-5 flex justify-end gap-2">
-        <button id="btnRemindLater" class="px-4 py-2 rounded-xl bg-graysoft">Später</button>
-        <button id="btnBackupNow" class="px-4 py-2 rounded-xl text-white" style="background:#AF9778">Jetzt sichern</button>
-      </div>
+        <div class="flex items-start gap-3"><div class="text-2xl">💡</div><div><h3 class="text-xl font-semibold mb-1" style="color:#AF9778">Erinnerung</h3><p class="text-slate-700">Es ist wieder Zeit für ein Backup, um deine Daten zu sichern.</p></div></div>
+        <div class="mt-5 flex justify-end gap-2"><button id="btnRemindLater" class="px-4 py-2 rounded-xl bg-graysoft">Später</button><button id="btnBackupNow" class="px-4 py-2 rounded-xl text-white" style="background:#AF9778">Jetzt sichern</button></div>
     </div>
-  </div>
+</div>
 
-  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur border border-gray-200 shadow-xl rounded-xl px-4 py-3 hidden max-w-[90%] text-center">
-    <span id="toastMsg" class="text-sm"></span>
-    <a id="toastLink" href="#" target="_blank" class="ml-3 underline" style="color:#AF9778">Öffnen</a>
-  </div>
+<div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur border shadow-xl rounded-xl px-4 py-3 hidden max-w-[90%] text-center">
+  <span id="toastMsg" class="text-sm"></span>
+</div>
 
-  <script src="app.js?v=6"></script> <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./service-worker.js').catch(console.error);
-    }
-  </script>
+<script src="app.js?v=7"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+  }
+</script>
 </body>
-
 </html>
