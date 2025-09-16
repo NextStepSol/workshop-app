@@ -279,7 +279,7 @@ function handleSettingsFormSubmit(event) {
 }
 
 // --- Backup & Export ---
-function exportCsv() { /*... Dein Code ...*/ }
+function exportCsv() { /*... Dein Code für CSV Export ...*/ }
 function exportBackup() {
     const data = { version: 1, exported_at: new Date().toISOString(), slots: load(LS_SLOTS), bookings: load(LS_BOOKINGS) };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -297,7 +297,7 @@ async function handleRestoreFile(file) {
         alert("Backup erfolgreich wiederhergestellt."); render();
     } catch (err) { alert("Wiederherstellung fehlgeschlagen: " + err.message); }
 }
-window.downloadICS = (slot) => { /*... Dein Code ...*/ }
+window.downloadICS = (slot) => { /*... Dein Code für ICS Download ...*/ }
 function maybeShowBackupReminder() {
     if (localStorage.getItem(LS_LAST_BACKUP) === todayKey()) return;
     openModal(modalReminder);
@@ -308,7 +308,7 @@ function initializeEventListeners() {
     // Globale Aktionen
     $("#search")?.addEventListener("input", render);
     $("#filterStatus")?.addEventListener("change", render);
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") document.querySelectorAll(".modal").forEach(closeModal); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") document.querySelectorAll(".modal").forEach(m => closeModal(m)); });
     
     // Schließen-Buttons in Modals
     document.querySelectorAll("[data-close]").forEach(btn => {
@@ -391,7 +391,11 @@ function initializeEventListeners() {
         $('#menu_btnBackup').onclick = e => { e.preventDefault(); exportBackup(); };
         $('#menu_btnArchiveView').onclick = e => { e.preventDefault(); const el = $('#archSection'); if (el) { el.open = true; el.scrollIntoView({behavior: 'smooth'}); } };
     }
-
+    
+    // Wiederherstellen-Logik
+    $('#fileRestore').onchange = e => handleRestoreFile(e.target.files?.[0]);
+    $('#m_btnRestore').onclick = () => $('#fileRestore').click();
+    
     // Mobiles Menü
     const mobileMenu = $("#mobileMenu"), mobilePanel = $("#mobilePanel");
     $('#btnMenu')?.addEventListener('click', () => {
@@ -404,13 +408,12 @@ function initializeEventListeners() {
         const onDone = () => { mobileMenu.classList.add('hidden'); mobilePanel.removeEventListener('transitionend', onDone); };
         mobilePanel.addEventListener('transitionend', onDone);
     };
-    document.querySelector("[data-close='#mobileMenu']")?.addEventListener('click', closeMobileMenu); // Schließt auch bei Klick auf Hintergrund
+    document.querySelectorAll("[data-close='#mobileMenu']").forEach(btn => btn.addEventListener('click', closeMobileMenu));
     $('#m_btnSettings').onclick = () => { closeMobileMenu(); openSettings(); };
     $('#m_btnManageSlots').onclick = () => { closeMobileMenu(); openNewSlot(); };
     $('#m_btnExportCsv').onclick = () => { closeMobileMenu(); exportCsv(); };
     $('#m_btnBackup').onclick = () => { closeMobileMenu(); exportBackup(); };
     $('#m_btnArchiveView').onclick = () => { closeMobileMenu(); const el = $('#archSection'); if (el) { el.open = true; el.scrollIntoView({behavior: 'smooth'}); } };
-    $('#m_btnRestore').onclick = () => $('#fileRestore').click();
 }
 
 // --- App Start ---
