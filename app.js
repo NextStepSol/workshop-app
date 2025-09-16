@@ -110,7 +110,7 @@ function render() {
         ${renderSection("activeSection", "Aktuell", active, load(LS_ACTIVE_COLLAPSED, false))}
         ${archived.length ? renderSection("archSection", "Archiv", archived, load(LS_ARCH_COLLAPSED, true)) : ""}
     `;
-    maybeShowBackupReminder();
+    //maybeShowBackupReminder();
 }
 
 function renderSection(id, title, slots, isSectionCollapsed) {
@@ -423,4 +423,6 @@ document.addEventListener('DOMContentLoaded', () => {
     createInitialData();
     initializeEventListeners();
     render();
+
+    maybeShowBackupReminder();
 });
