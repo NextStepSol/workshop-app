@@ -60,7 +60,6 @@ function createInitialData() {
 // --- Berechnungen & Status ---
 const bookingsBySlot = id => load(LS_BOOKINGS).filter(b => b.slotId === id);
 const sumBooked = id => bookingsBySlot(id).reduce((n, b) => n + Number(b.count || 0), 0);
-
 function slotStatus(slot) {
     if (slot.archived) return "archived";
     if (new Date(slot.ends_at) < new Date()) return "past";
@@ -68,7 +67,6 @@ function slotStatus(slot) {
     if (left <= 0) return "full";
     return "open";
 }
-
 function statusBadge(status, left) {
     const badges = {
         archived: `<span class="px-2 py-1 rounded-lg bg-slate-300 text-xs">archiv</span>`,
@@ -108,7 +106,6 @@ function render() {
     const active = all.filter(s => !s.archived).sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
     const archived = all.filter(s => s.archived).sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at));
 
-    const collapsedSlots = load(LS_COLLAPSED_SLOTS, []);
     listEl.innerHTML = `
         ${renderSection("activeSection", "Aktuell", active, load(LS_ACTIVE_COLLAPSED, false))}
         ${archived.length ? renderSection("archSection", "Archiv", archived, load(LS_ARCH_COLLAPSED, true)) : ""}
@@ -117,21 +114,19 @@ function render() {
 }
 
 function renderSection(id, title, slots, isSectionCollapsed) {
+    const cardsHtml = slots.length ? slots.map(renderCard).join("") : `<div class="text-slate-600 bg-white/80 p-4 rounded-2xl">Keine Termine in dieser Ansicht.</div>`;
     return `
     <details id="${id}" class="mb-6" ${isSectionCollapsed ? "" : "open"}>
         <summary class="list-none cursor-pointer select-none rounded-xl px-3 py-2 bg-slate-200/70 hover:bg-slate-300/70 flex items-center justify-between shadow-sm">
             <span class="font-medium">${title} (${slots.length})</span>
             <span class="text-slate-500 text-sm">${isSectionCollapsed ? "ausklappen" : "einklappen"}</span>
         </summary>
-        <div class="mt-3 space-y-3">
-            ${slots.length ? slots.map(renderCard).join("") : `<div class="text-slate-600 bg-white/80 p-4 rounded-2xl">Keine Termine in dieser Ansicht.</div>`}
-        </div>
+        <div class="mt-3 space-y-3">${cardsHtml}</div>
     </details>`;
 }
 
 function renderCard(s) {
-    const collapsedSlots = load(LS_COLLAPSED_SLOTS, []);
-    const isCollapsed = collapsedSlots.includes(s.id);
+    const isCollapsed = load(LS_COLLAPSED_SLOTS, []).includes(s.id);
     const booked = sumBooked(s.id);
     const left = Math.max(0, s.capacity - booked);
     const status = slotStatus(s);
@@ -139,13 +134,13 @@ function renderCard(s) {
     const barColor = { archived: "bg-slate-300", past: "bg-gray-300", full: "bg-rose-400", open: left <= 2 ? "bg-amber-400" : "bg-emerald-500" }[status];
     const actions = `
         ${!s.archived ? `<button type="button" class="px-3 py-2 rounded-xl text-sm" style="background:#AF9778;color:white" onclick="openBooking('${s.id}')">Buchung</button>` : ''}
-        <button type="button" class="px-3 py-2 rounded-xl bg-gray-100 text-sm" onclick="editSlot('${s.id}')">Bearbeiten</button>
-        <button type="button" class="px-3 py-2 rounded-xl ${s.archived ? 'bg-emerald-100' : 'bg-slate-100'} text-sm" onclick="toggleArchive('${s.id}', ${!s.archived})">${s.archived ? 'Reaktivieren' : 'Archivieren'}</button>
-        <button type="button" class="px-3 py-2 rounded-xl bg-gray-100 text-sm" onclick='downloadICS(${JSON.stringify(s)})'>Kalender (.ics)</button>
-        <button type="button" class="px-3 py-2 rounded-xl bg-rose-100 text-sm" onclick="openConfirmDelete('${s.id}')">Löschen</button>`;
+        <button type="button" class="px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-sm" onclick="editSlot('${s.id}')">Bearbeiten</button>
+        <button type="button" class="px-3 py-2 rounded-xl ${s.archived ? 'bg-emerald-100 hover:bg-emerald-200' : 'bg-slate-100 hover:bg-slate-200'} text-sm" onclick="toggleArchive('${s.id}', ${!s.archived})">${s.archived ? 'Reaktivieren' : 'Archivieren'}</button>
+        <button type="button" class="px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-sm" onclick='downloadICS(${JSON.stringify(s)})'>Kalender (.ics)</button>
+        <button type="button" class="px-3 py-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-sm" onclick="openConfirmDelete('${s.id}')">Löschen</button>`;
 
     return `
-    <details class="rounded-2xl bg-white/85 backdrop-blur border shadow-sm block" data-slot-id="${s.id}" ${isCollapsed ? '' : 'open'}>
+    <details class="rounded-2xl bg-white/85 backdrop-blur border border-gray-200 shadow-sm block" data-slot-id="${s.id}" ${isCollapsed ? '' : 'open'}>
         <summary class="list-none cursor-pointer p-4 flex items-start justify-between gap-3">
             <div class="min-w-0">
                 <div class="text-sm text-slate-500">${statusBadge(status, left)}</div>
@@ -166,18 +161,19 @@ function renderCard(s) {
 function renderBookingsMini(slotId) {
     const list = bookingsBySlot(slotId);
     if (!list.length) return `<div class="text-xs text-slate-500 mt-2">Noch keine Buchungen.</div>`;
-    return `<div class="mt-2 text-sm"><div class="font-medium mb-1">Buchungen:</div><ul class="space-y-1">${list.map(b => `<li class="flex items-center justify-between bg-gray-50 border rounded-lg px-2 py-1 cursor-pointer hover:bg-gray-100" onclick="editBooking('${b.id}')"><span>${b.name} (${b.count}) · ${b.phone}${b.notes ? ` · ${b.notes}` : ''}</span><span class="text-xs text-slate-400">›</span></li>`).join("")}</ul></div>`;
+    const bookingsHtml = list.map(b => `<li class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 cursor-pointer hover:bg-gray-100" onclick="editBooking('${b.id}')"><span>${b.name} (${b.count}) · ${b.phone}${b.notes ? ` · ${b.notes}` : ''}</span><span class="text-xs text-slate-400">›</span></li>`).join("");
+    return `<div class="mt-2 text-sm"><div class="font-medium mb-1">Buchungen:</div><ul class="space-y-1">${bookingsHtml}</ul></div>`;
 }
 
 // --- Modals & Hauptaktionen ---
-const allModals = document.querySelectorAll(".modal");
-function openModal(target) { allModals.forEach(m => m.classList.add("hidden")); target.classList.remove("hidden"); target.classList.add("flex"); }
+function openModal(target) { document.querySelectorAll(".modal").forEach(m => m.classList.add("hidden")); target.classList.remove("hidden"); target.classList.add("flex"); }
 function closeModal(target) { target.classList.add("hidden"); target.classList.remove("flex"); }
-function openConfirmDelete(slotId) { pendingDeleteSlotId = slotId; openModal(modalConfirmDelete); }
-function toggleArchive(id, flag) { const slots = load(LS_SLOTS); const s = slots.find(x => x.id === id); if (s) { s.archived = !!flag; save(LS_SLOTS, slots); render(); } }
+window.openConfirmDelete = (slotId) => { pendingDeleteSlotId = slotId; openModal(modalConfirmDelete); }
+window.toggleArchive = (id, flag) => { const slots = load(LS_SLOTS); const s = slots.find(x => x.id === id); if (s) { s.archived = !!flag; save(LS_SLOTS, slots); render(); } }
 
 function openNewSlot() {
     $("#formSlot").reset();
+    ctx.currentSlotId = null;
     const now = new Date(); now.setMinutes(0, 0, 0);
     const s = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17);
     const e = new Date(s.getTime() + 2 * 3600 * 1000);
@@ -185,20 +181,19 @@ function openNewSlot() {
     $("#sl_starts").value = toLocal(s);
     $("#sl_ends").value = toLocal(e);
     $("#row_title_other").style.display = "none";
-    $("#formSlot").onsubmit = (e) => handleSlotFormSubmit(e, null);
     openModal(modalSlots);
 }
 
 window.editSlot = (id) => {
-    const slots = load(LS_SLOTS); const s = slots.find(x => x.id === id); if (!s) return;
+    const s = load(LS_SLOTS).find(x => x.id === id); if (!s) return;
     $("#formSlot").reset();
+    ctx.currentSlotId = id;
     const CATS = ["Schmuck-Workshop", "Kindergeburtstag", "JGA", "Mädelsabend", "Weihnachtsfeier", "Sonstiges"];
     if (CATS.includes(s.title)) { $("#sl_category").value = s.title; $("#row_title_other").style.display = "none"; }
     else { $("#sl_category").value = "Sonstiges"; $("#row_title_other").style.display = "block"; $("#sl_title_other").value = s.title; }
     $("#sl_capacity").value = s.capacity;
     $("#sl_starts").value = toLocal(new Date(s.starts_at));
     $("#sl_ends").value = toLocal(new Date(s.ends_at));
-    $("#formSlot").onsubmit = (e) => handleSlotFormSubmit(e, id);
     openModal(modalSlots);
 };
 
@@ -216,12 +211,8 @@ window.editBooking = (id) => {
     const b = load(LS_BOOKINGS).find(x => x.id === id); if (!b) return;
     ctx = { currentSlotId: b.slotId, currentBookingId: b.id };
     $("#formBooking").reset();
-    $("#bk_name").value = b.name;
-    $("#bk_phone").value = b.phone;
-    $("#bk_notes").value = b.notes || "";
-    $("#bk_count").value = b.count;
-    $("#bk_channel").value = b.channel || "";
-    $("#bk_salutation").value = b.salutation || "Liebe/r";
+    $("#bk_name").value = b.name; $("#bk_phone").value = b.phone; $("#bk_notes").value = b.notes || "";
+    $("#bk_count").value = b.count; $("#bk_channel").value = b.channel || ""; $("#bk_salutation").value = b.salutation || "Liebe/r";
     $("#modalBookingTitle").textContent = "Buchung bearbeiten";
     $("#btnDeleteBooking").classList.remove("hidden");
     $("#btnWhatsappShare").classList.remove("hidden");
@@ -238,21 +229,22 @@ function showToast(msg, type = "info") {
     toastMsg.textContent = msg;
     const color = type === 'success' ? 'bg-emerald-100 border-emerald-300' : 'bg-white/90 border-gray-200';
     toast.className = `fixed bottom-4 left-1/2 -translate-x-1/2 backdrop-blur border shadow-xl rounded-xl px-4 py-3 ${color}`;
+    toast.classList.remove('hidden');
     setTimeout(() => toast.classList.add('hidden'), 4000);
 }
 
 // --- Formular-Handler ---
-function handleSlotFormSubmit(event, slotId) {
+function handleSlotFormSubmit(event) {
     event.preventDefault();
     const slots = load(LS_SLOTS);
-    const slot = slotId ? slots.find(s => s.id === slotId) : { id: uid(), archived: false };
+    const slot = ctx.currentSlotId ? slots.find(s => s.id === ctx.currentSlotId) : { id: uid(), archived: false };
     
     slot.title = ($("#sl_category").value === "Sonstiges") ? ($("#sl_title_other").value.trim() || "Workshop") : $("#sl_category").value;
     slot.capacity = Number($("#sl_capacity").value || 0);
     slot.starts_at = new Date($("#sl_starts").value).toISOString();
     slot.ends_at = new Date($("#sl_ends").value).toISOString();
 
-    if (!slotId) slots.push(slot);
+    if (!ctx.currentSlotId) slots.push(slot);
     save(LS_SLOTS, slots);
     closeModal(modalSlots);
     render();
@@ -263,28 +255,17 @@ function handleBookingFormSubmit(event) {
     const { currentSlotId, currentBookingId } = ctx;
     const slot = load(LS_SLOTS).find(s => s.id === currentSlotId);
     if (!slot) return closeModal(modalBooking);
-
     const all = load(LS_BOOKINGS);
     const old = currentBookingId ? all.find(x => x.id === currentBookingId) : null;
-    
     const booking = {
-        id: old?.id || uid(),
-        slotId: slot.id,
-        salutation: $("#bk_salutation")?.value || "Liebe/r",
-        name: $("#bk_name").value.trim(),
-        phone: $("#bk_phone").value.trim(),
-        notes: $("#bk_notes").value.trim(),
-        count: Number($("#bk_count").value || 0),
-        channel: $("#bk_channel").value,
-        created_at: old?.created_at || new Date().toISOString()
+        id: old?.id || uid(), slotId: slot.id, salutation: $("#bk_salutation")?.value || "Liebe/r",
+        name: $("#bk_name").value.trim(), phone: $("#bk_phone").value.trim(), notes: $("#bk_notes").value.trim(),
+        count: Number($("#bk_count").value || 0), channel: $("#bk_channel").value, created_at: old?.created_at || new Date().toISOString()
     };
-    
     if (!booking.name || !booking.phone || !booking.count) return alert("Bitte Name, Telefon und Personenanzahl angeben.");
     if (booking.count > slot.capacity - (sumBooked(slot.id) - (old?.count || 0))) return alert("Nicht genügend Plätze frei.");
-
     if (old) { all[all.findIndex(x => x.id === old.id)] = booking; } else { all.push(booking); }
     save(LS_BOOKINGS, all);
-    
     showToast("Buchung gespeichert.", "success");
     closeModal(modalBooking);
     render();
@@ -298,8 +279,15 @@ function handleSettingsFormSubmit(event) {
 }
 
 // --- Backup & Export ---
-function exportCsv() { /* Code für CSV Export */ }
-function exportBackup() { /* Code für Backup Export */ }
+function exportCsv() { /*... Dein Code ...*/ }
+function exportBackup() {
+    const data = { version: 1, exported_at: new Date().toISOString(), slots: load(LS_SLOTS), bookings: load(LS_BOOKINGS) };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    const d = new Date(); const name = `seeyou_backup_${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}.json`;
+    a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href);
+    localStorage.setItem(LS_LAST_BACKUP, todayKey());
+}
 async function handleRestoreFile(file) {
     if (!file || !confirm("Achtung: Wiederherstellen überschreibt alle Daten. Fortfahren?")) return;
     try {
@@ -309,7 +297,7 @@ async function handleRestoreFile(file) {
         alert("Backup erfolgreich wiederhergestellt."); render();
     } catch (err) { alert("Wiederherstellung fehlgeschlagen: " + err.message); }
 }
-function downloadICS(slot) { /* Code für ICS Download */ }
+window.downloadICS = (slot) => { /*... Dein Code ...*/ }
 function maybeShowBackupReminder() {
     if (localStorage.getItem(LS_LAST_BACKUP) === todayKey()) return;
     openModal(modalReminder);
@@ -317,14 +305,18 @@ function maybeShowBackupReminder() {
 
 // --- Event Listener Initialisierung ---
 function initializeEventListeners() {
+    // Globale Aktionen
     $("#search")?.addEventListener("input", render);
     $("#filterStatus")?.addEventListener("change", render);
-
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") document.querySelectorAll(".modal").forEach(closeModal); });
+    
+    // Schließen-Buttons in Modals
     document.querySelectorAll("[data-close]").forEach(btn => {
         const modalToClose = $(btn.dataset.close);
         if(modalToClose) btn.onclick = () => closeModal(modalToClose);
     });
 
+    // Bestätigungs-Modal (Löschen)
     $("#btnCancelDelete").onclick = () => closeModal(modalConfirmDelete);
     $("#btnConfirmDelete").onclick = () => {
         if (!pendingDeleteSlotId) return closeModal(modalConfirmDelete);
@@ -332,7 +324,33 @@ function initializeEventListeners() {
         save(LS_BOOKINGS, load(LS_BOOKINGS).filter(b => b.slotId !== pendingDeleteSlotId));
         closeModal(modalConfirmDelete); render();
     };
+    
+    // Formular-Einreichungen
+    $("#formSlot").addEventListener("submit", handleSlotFormSubmit);
+    $("#formBooking").addEventListener("submit", handleBookingFormSubmit);
+    $("#formSettings").addEventListener("submit", handleSettingsFormSubmit);
 
+    // Klick-Handler für Aktionen in Modals
+    $('#btnDeleteBooking').onclick = () => {
+        if (!confirm("Diese Buchung wirklich löschen?")) return;
+        save(LS_BOOKINGS, load(LS_BOOKINGS).filter(x => x.id !== ctx.currentBookingId));
+        closeModal(modalBooking); render();
+    };
+    $('#btnWhatsappShare').onclick = () => {
+        const b = load(LS_BOOKINGS).find(x => x.id === ctx.currentBookingId);
+        const slot = load(LS_SLOTS).find(s => s.id === b.slotId);
+        if (!b || !slot) return;
+        const plural = Number(b.count) > 1;
+        const txt = load(LS_WHATSAPP_TEMPLATE, DEFAULT_WHATSAPP_TEMPLATE)
+            .replace(/\[Anrede\]/g, b.salutation || "Liebe/r").replace(/\[Name\]/g, b.name)
+            .replace(/\[Datum\]/g, fmt(slot.starts_at)).replace(/\[Anzahl\]/g, b.count)
+            .replace(/\[Du_Akk\]/g, plural ? "euch" : "dich").replace(/\[Du_Dat\]/g, plural ? "euch" : "dir");
+        window.open(`https://wa.me/${normalizePhoneDE(b.phone)}?text=${encodeURIComponent(txt)}`, "_blank");
+    };
+    $('#btnRemindLater').onclick = () => closeModal(modalReminder);
+    $('#btnBackupNow').onclick = () => { exportBackup(); closeModal(modalReminder); showToast("Backup erfolgreich erstellt.", "success"); };
+
+    // Spezifische UI-Elemente
     $("#sl_starts")?.addEventListener("change", () => {
         const slStarts = $("#sl_starts"), slEnds = $("#sl_ends");
         if (!slStarts.value) return;
@@ -341,7 +359,11 @@ function initializeEventListeners() {
             slEnds.value = toLocal(new Date(new Date(slStarts.value).getTime() + 2 * 3600 * 1000));
         }
     });
+    $("#sl_category")?.addEventListener("change", (e) => {
+        $("#row_title_other").style.display = (e.target.value === "Sonstiges") ? "block" : "none";
+    });
 
+    // Einklapp-Logik (Delegation)
     listEl.addEventListener('toggle', (event) => {
         const target = event.target;
         if (target.tagName !== 'DETAILS') return;
@@ -357,6 +379,7 @@ function initializeEventListeners() {
         }
     }, true);
 
+    // Desktop Dropdown-Menü
     const desktopMenuTrigger = $('#desktop-menu-trigger'), desktopMenuPanel = $('#desktop-menu-panel');
     if (desktopMenuTrigger) {
         desktopMenuTrigger.addEventListener('click', e => { e.stopPropagation(); desktopMenuPanel.classList.toggle('hidden'); });
@@ -369,27 +392,31 @@ function initializeEventListeners() {
         $('#menu_btnArchiveView').onclick = e => { e.preventDefault(); const el = $('#archSection'); if (el) { el.open = true; el.scrollIntoView({behavior: 'smooth'}); } };
     }
 
-    $('#fileRestore').onchange = e => handleRestoreFile(e.target.files?.[0]);
-    $('#m_btnRestore').onclick = () => $('#fileRestore').click();
-    
-    // Formular-Handler
-    $("#formSlot").onsubmit = (e) => handleSlotFormSubmit(e, null); // Wird in openNewSlot/editSlot überschrieben
-    $("#formBooking").addEventListener("submit", handleBookingFormSubmit);
-    $("#formSettings").addEventListener("submit", handleSettingsFormSubmit);
-
-    // Klick-Handler für Aktionen in Modals
-    $('#btnDeleteBooking').onclick = () => {
-        if (!confirm("Diese Buchung wirklich löschen?")) return;
-        save(LS_BOOKINGS, load(LS_BOOKINGS).filter(x => x.id !== ctx.currentBookingId));
-        closeModal(modalBooking); render();
+    // Mobiles Menü
+    const mobileMenu = $("#mobileMenu"), mobilePanel = $("#mobilePanel");
+    $('#btnMenu')?.addEventListener('click', () => {
+        mobileMenu.classList.remove('hidden');
+        requestAnimationFrame(() => mobilePanel.classList.remove('translate-x-full'));
+    });
+    const closeMobileMenu = () => {
+        if (!mobilePanel) return;
+        mobilePanel.classList.add('translate-x-full');
+        const onDone = () => { mobileMenu.classList.add('hidden'); mobilePanel.removeEventListener('transitionend', onDone); };
+        mobilePanel.addEventListener('transitionend', onDone);
     };
-    $('#btnWhatsappShare').onclick = () => { /* WhatsApp Logik hier */ };
-    $('#btnRemindLater').onclick = () => closeModal(modalReminder);
-    $('#btnBackupNow').onclick = () => { exportBackup(); closeModal(modalReminder); showToast("Backup erfolgreich erstellt.", "success"); };
+    document.querySelector("[data-close='#mobileMenu']")?.addEventListener('click', closeMobileMenu); // Schließt auch bei Klick auf Hintergrund
+    $('#m_btnSettings').onclick = () => { closeMobileMenu(); openSettings(); };
+    $('#m_btnManageSlots').onclick = () => { closeMobileMenu(); openNewSlot(); };
+    $('#m_btnExportCsv').onclick = () => { closeMobileMenu(); exportCsv(); };
+    $('#m_btnBackup').onclick = () => { closeMobileMenu(); exportBackup(); };
+    $('#m_btnArchiveView').onclick = () => { closeMobileMenu(); const el = $('#archSection'); if (el) { el.open = true; el.scrollIntoView({behavior: 'smooth'}); } };
+    $('#m_btnRestore').onclick = () => $('#fileRestore').click();
 }
 
 // --- App Start ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Style für Details-Pfeil einmalig hinzufügen
+    document.head.insertAdjacentHTML('beforeend', '<style id="details-arrow-style">details[open] .details-arrow { transform: rotate(90deg); }</style>');
     createInitialData();
     initializeEventListeners();
     render();
